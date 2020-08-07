@@ -35,13 +35,16 @@ def main():
                         help='Branch in  git reprository')
     parser.add_argument('--chroot', required=True,
                         help='Path to chroot environment')
-    parser.add_argument('--sysctl', required=False, default="./sysctl",
+    parser.add_argument('--sysctl', required=False,
+                        default=os.path.dirname(__file__) + "/sysctl",
                         help='Path to sysctl file')
-    parser.add_argument('--cmdline', required=False, default="./cmdline",
+    parser.add_argument('--cmdline', required=False,
+                        default=os.path.dirname(__file__) + "/cmdline",
                         help='Path to cmdline file')
     parser.add_argument('--bisect_bin', required=False, default="./bisect_bin",
                         help='Path to bisect_bin directory')
-    parser.add_argument('--repro_opts', required=False, default="./repro.opts",
+    parser.add_argument('--repro_opts', required=False,
+                        default=os.path.dirname(__file__) + "/repro.opts",
                         help='Path to repro_opts file')
     args = parser.parse_args()
 
@@ -52,7 +55,7 @@ def main():
     outdir = os.path.abspath(args.output)
     os.makedirs(outdir, exist_ok=True)
 
-    with open("vm_syz-bisect.cfg") as cfg_template_file:
+    with open(os.path.dirname(__file__) + "/vm_syz-bisect.cfg") as cfg_template_file:
         cfg_template = cfg_template_file.readlines()
 
     vm_cfg_file = os.path.join(args.output, "vm.cfg")
