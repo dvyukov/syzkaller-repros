@@ -46,6 +46,8 @@ def main():
     parser.add_argument('--repro_opts', required=False,
                         default=os.path.dirname(__file__) + "/repro.opts",
                         help='Path to repro_opts file')
+    parser.add_argument('--ccache', required=False, default="",
+                        help='Path to ccache binary')
     args = parser.parse_args()
 
     if not args.reproducer and not args.reproducer:
@@ -71,6 +73,8 @@ def main():
             line = line.replace("REPLACE_KERNEL_BRANCH", args.kernel_branch)
             line = line.replace("REPLACE_BISECT_BIN",
                                 os.path.abspath(args.bisect_bin))
+            line = line.replace("REPLACE_CCACHE_PATH",
+                                args.ccache)
             line = line.replace("REPLACE_SYZKALLER_REPO",
                                 args.syzkaller_repository)
             line = line.replace("REPLACE_SYSCTL", os.path.abspath(args.sysctl))
