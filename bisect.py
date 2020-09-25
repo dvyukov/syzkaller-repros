@@ -48,6 +48,8 @@ def main():
                         help='Path to repro_opts file')
     parser.add_argument('--ccache', required=False, default="",
                         help='Path to ccache binary')
+    parser.add_argument('--kernel_src', required=False,
+                        help='Path to kernel source directory')
     args = parser.parse_args()
 
     if not args.reproducer and not args.reproducer_syz:
@@ -69,7 +71,10 @@ def main():
 
     vm_cfg_file = os.path.join(crashdir, "vm.cfg")
     with open(vm_cfg_file, "w+") as cfg_file:
-        kernel_source_dir = os.path.join(outdir, 'linux')
+        if args.kernel_src:
+            kernel_source_dir = os.path.abspath(args.kernel_src)
+        else:
+            kernel_source_dir = os.path.join(outdir, 'linux')
         syzkaller_source_dir = os.path.join(
             os.environ.copy()["HOME"],
             "go/src/github.com/google/syzkaller_bisect")
