@@ -50,23 +50,30 @@ def main():
                         help='Path to ccache binary')
     args = parser.parse_args()
 
-    if not args.reproducer and not args.reproducer:
+    if not args.reproducer and not args.reproducer_syz:
         logging.error("Give either reproducer c source or syz file")
         exit(-1)
 
     outdir = os.path.abspath(args.output)
     os.makedirs(outdir, exist_ok=True)
 
+    if args.reproducer_syz:
+        reproducer = args.reproducer_syz
+    elif args.reproducer:
+        reproducer = args.reproducer
+    crashdir = os.path.join(outdir, os.path.basename(reproducer))
+    os.makedirs(crashdir, exist_ok=True)
+
     with open(os.path.dirname(__file__) + "/vm_syz-bisect.cfg") as cfg_template_file:
         cfg_template = cfg_template_file.readlines()
 
-    vm_cfg_file = os.path.join(args.output, "vm.cfg")
+    vm_cfg_file = os.path.join(crashdir, "vm.cfg")
     with open(vm_cfg_file, "w+") as cfg_file:
         kernel_source_dir = os.path.join(outdir, 'linux')
         syzkaller_source_dir = os.path.join(
             os.environ.copy()["HOME"],
             "go/src/github.com/google/syzkaller_bisect")
-        workdir = os.path.join(outdir, 'workdir')
+        workdir = os.path.join(crashdir, 'workdir')
         image_dir = os.path.join(workdir, 'image')
         for line in cfg_template:
             line = line.replace("REPLACE_KERNEL_REPO", args.kernel_repository)
@@ -80,8 +87,7 @@ def main():
             line = line.replace("REPLACE_SYSCTL", os.path.abspath(args.sysctl))
             line = line.replace("REPLACE_CMDLINE",
                                 os.path.abspath(args.cmdline))
-            line = line.replace("REPLACE_WORKDIR", os.path.join(outdir,
-                                                                'workdir'))
+            line = line.replace("REPLACE_WORKDIR", workdir)
             line = line.replace("REPLACE_KERNEL_OBJ", kernel_source_dir)
             line = line.replace("REPLACE_KERNEL_SOURCE", kernel_source_dir)
             line = line.replace("REPLACE_SYZKALLER", syzkaller_source_dir)
@@ -104,7 +110,7 @@ def main():
 
     kernel_commit = result.stdout.decode("utf-8").strip().split("\n")[0].split()[0]
 
-    with open(os.path.join(args.output, "kernel.commit"),
+    with open(os.path.join(crashdir, "kernel.commit"),
               "w+") as kernel_commit_file:
         kernel_commit_file.write(kernel_commit)
 
@@ -117,26 +123,26 @@ def main():
 
     syzkaller_commit = result.stdout.decode("utf-8").strip().split("\n")[0].split()[0]
 
-    with open(os.path.join(args.output, "syzkaller.commit"),
+    with open(os.path.join(crashdir, "syzkaller.commit"),
               "w+") as syzkaller_commit_file:
         syzkaller_commit_file.write(syzkaller_commit)
 
     if args.baseline_config:
         shutil.copyfile(args.baseline_config,
-                        os.path.join(outdir, "kernel.baseline_config"))
+                        os.path.join(crashdir, "kernel.baseline_config"))
     shutil.copyfile(args.reproducer_config,
-                    os.path.join(outdir, "kernel.config"))
+                    os.path.join(crashdir, "kernel.config"))
     if args.reproducer:
-        shutil.copyfile(args.reproducer, os.path.join(outdir, "repro.c"))
+        shutil.copyfile(args.reproducer, os.path.join(crashdir, "repro.c"))
     if args.reproducer_syz:
-        shutil.copyfile(args.reproducer_syz, os.path.join(outdir, "repro.syz"))
-    shutil.copyfile(args.repro_opts, os.path.join(outdir, "repro.opts"))
+        shutil.copyfile(args.reproducer_syz, os.path.join(crashdir, "repro.syz"))
+    shutil.copyfile(args.repro_opts, os.path.join(crashdir, "repro.opts"))
 
-    with open(os.path.join(outdir, "syz-bisect.log"), "w+") as syz_bisect_log:
-        cmd = ["syz-bisect", "-config", os.path.basename(vm_cfg_file)]
+    with open(os.path.join(crashdir, "syz-bisect.log"), "w+") as syz_bisect_log:
+        cmd = ["syz-bisect", "-crash", crashdir, "-config", vm_cfg_file]
         logging.info("Running: " + str(cmd))
         result = subprocess.run(cmd, stdout=syz_bisect_log,
-                                stderr=syz_bisect_log, cwd=outdir)
+                                stderr=syz_bisect_log, cwd=crashdir)
         if result.returncode != 0:
             logging.error("syz-bisect failed")
             exit(result.returncode)
