@@ -29,6 +29,7 @@
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
+#include <sched.h>
 
 #include <linux/genetlink.h>
 #include <linux/if_addr.h>
