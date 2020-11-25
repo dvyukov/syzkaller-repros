@@ -53,7 +53,7 @@ void loop()
                  0xfffffffffffffffful, 0x0ul);
   memcpy((void*)0x2040aff5,
          "\x2f\x64\x65\x76\x2f\x6c\x6f\x6f\x70\x23\x00", 11);
-  r[2] = syz_open_dev(0x2040aff5ul, 0xfffffffffffffffeul, 0x1ul);
+  r[2] = syz_open_dev(0x2040aff5ul, 0xfffffffeul, 0x1ul);
   memcpy((void*)0x20614000, "\x74\x75\x6e\x08\x00\x00\x00\x00\x00\x00"
                             "\x00\x80\x00\x00\x00\x00",
          16);
