@@ -21,6 +21,7 @@
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <sched.h>
 
 #include <linux/genetlink.h>
 #include <linux/if_addr.h>
